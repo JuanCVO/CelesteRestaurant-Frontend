@@ -55,8 +55,14 @@ export default function HomePage() {
   const [quantity, setQuantity] = useState<string>("");
   const [tipAmount, setTipAmount] = useState<string>("");
 
-  const [cierreData, setCierreData] = useState<any>(null);
+  interface CierreData {
+  fecha: string;
+  pedidosCerrados: number;
+  totalPropinas: number;
+  totalVentas: number;
+  }
 
+const [cierreData, setCierreData] = useState<CierreData | null>(null);
   // 📦 Obtener productos y pedidos
   const fetchProducts = async () => {
     const res = await fetch(`${API_URL}/products`);
@@ -419,6 +425,18 @@ export default function HomePage() {
 }
 
 // 🔹 Subcomponente reutilizable para nuevo pedido y agregar productos
+interface PedidoDialogContentProps {
+  products: Product[];
+  selectedProduct: number | "";
+  setSelectedProduct: (value: number | "") => void;
+  quantity: string;
+  setQuantity: (value: string) => void;
+  addProductToOrder: () => void;
+  pedido: { table?: string; items: OrderItem[] };
+  setPedido: React.Dispatch<React.SetStateAction<{ table: string; items: OrderItem[] }>>;
+  onSave: () => void;
+}
+
 function PedidoDialogContent({
   products,
   selectedProduct,
@@ -429,7 +447,7 @@ function PedidoDialogContent({
   pedido,
   setPedido,
   onSave,
-}: any) {
+}: PedidoDialogContentProps) {
   return (
     <div className="flex flex-col gap-3">
       {/* Si existe campo 'table' lo mostramos (nuevo pedido) */}

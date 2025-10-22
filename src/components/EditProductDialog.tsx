@@ -1,32 +1,54 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-interface EditProductDialogProps {
-  product: any;
-  onClose: () => void;
-  onSave: (updated: any) => void;
+
+export interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+  createdAt?: string;
 }
 
-export function EditProductDialog({ product, onClose, onSave }: EditProductDialogProps) {
+interface EditProductDialogProps {
+  product: Product;
+  onClose: () => void;
+  onSave: (updated: Product) => Promise<void> | void;
+}
+
+export function EditProductDialog({
+  product,
+  onClose,
+  onSave,
+}: EditProductDialogProps) {
   const [form, setForm] = useState({
     name: product.name,
     category: product.category,
-    price: product.price,
-    stock: product.stock,
+    price: product.price.toString(),
+    stock: product.stock.toString(),
   });
 
   const handleSave = async () => {
-    await onSave({
+    const updatedProduct: Product = {
       ...product,
       name: form.name,
       category: form.category,
-      price: parseFloat(form.price as any),
-      stock: parseInt(form.stock as any),
-    });
+      price: parseFloat(form.price),
+      stock: parseInt(form.stock, 10),
+    };
+
+    await onSave(updatedProduct);
     onClose();
   };
 
@@ -63,7 +85,9 @@ export function EditProductDialog({ product, onClose, onSave }: EditProductDialo
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
           <Button onClick={handleSave}>Guardar</Button>
         </DialogFooter>
       </DialogContent>

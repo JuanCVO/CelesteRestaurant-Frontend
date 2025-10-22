@@ -32,7 +32,7 @@ interface Pedido {
 }
 
 export default function HomePage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);

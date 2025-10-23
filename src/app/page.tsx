@@ -264,7 +264,7 @@ const handleCierreDelDia = async () => {
       return;
     }
 
-    setCierreData(data);
+    setCierreData(data.cierre);
     setShowConfirmDialog(false);
     setShowCierreDialog(true);
   } catch (error) {
@@ -550,11 +550,18 @@ const handleCierreDelDia = async () => {
           <DialogHeader><DialogTitle>Cierre del Día</DialogTitle></DialogHeader>
           {cierreData ? (
             <div className="space-y-3">
-              <p><strong>Fecha:</strong> {new Date(cierreData.fecha).toLocaleString()}</p>
-              <p><strong>Pedidos Cerrados:</strong> {cierreData.pedidosCerrados}</p>
-              <p><strong>Total Propinas:</strong> ${Number(cierreData.totalPropinas).toFixed(0)}</p>
-              <p><strong>Total Ventas:</strong> ${Number(cierreData.totalVentas).toFixed(0)}</p>
-              <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setShowCierreDialog(false)}>✅ Cerrar</Button>
+              <p>
+                  <strong>Fecha:</strong>{" "}
+                  {new Date(cierreData.fecha).toLocaleDateString("es-CO", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  })}
+                </p>
+                <p><strong>Pedidos Cerrados:</strong> {cierreData.pedidosCerrados ?? 0}</p>
+                <p><strong>Total Propinas:</strong> ${Number(cierreData.totalPropinas || 0).toFixed(0)}</p>
+                <p><strong>Total Ventas:</strong> ${Number(cierreData.totalVentas || 0).toFixed(0)}</p>
+                <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setShowCierreDialog(false)}>✅ Cerrar</Button>
             </div>
           ) : (
             <p className="text-gray-500 text-center">Cargando datos del cierre...</p>

@@ -228,7 +228,7 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
     fetchProducts();
   };
 
-  // 📅 Cierre del día (calcula pedidos cerrados hoy y guarda cierre)
+  // 📅 Cierre del día (calcula pedidos cerrados del dia )
   const handleCierreDelDia = async () => {
     const res = await fetch(`${API_URL}/orders/cierre-dia`, {
       method: "POST",
@@ -460,7 +460,7 @@ function PedidoDialogContent({
           <option value="">Selecciona un producto</option>
           {products.map((p: Product) => (
             <option key={p.id} value={p.id} disabled={p.stock === 0}>
-              {p.name} - ${Number(p.price).toFixed(2)} {p.stock === 0 ? "(Sin stock)" : `(${p.stock})`}
+              {p.name} - ${Number(p.price).toFixed(0)} {p.stock === 0 ? "(Sin stock)" : `(${p.stock})`}
             </option>
           ))}
         </select>
@@ -477,7 +477,7 @@ function PedidoDialogContent({
           {pedido.items.map((i: OrderItem, idx: number) => (
             <div key={idx} className="flex justify-between">
               <span>{i.product?.name} × {i.quantity}</span>
-              <span>${((i.product?.price || 0) * i.quantity).toFixed(2)}</span>
+              <span>${((i.product?.price || 0) * i.quantity).toFixed(0)}</span>
             </div>
           ))}
         </div>

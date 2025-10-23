@@ -91,6 +91,22 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
     fetchProducts();
   };
 
+  const [cierres, setCierres] = useState<CierreData[]>([]);
+  const [showHistorialDialog, setShowHistorialDialog] = useState(false);
+
+  const fetchHistorialCierres = async () => {
+    const res = await fetch(`${API_URL}/cierres`); // <-- Asegúrate que el endpoint sea este
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(`❌ Error al obtener historial: ${data.error || "Desconocido"}`);
+      return;
+    }
+
+    setCierres(data);
+    setShowHistorialDialog(true);
+  };
+
   // ➕ Agregar producto a la lista local del modal (nuevo o añadir a existente)
   const addProductToLocalList = () => {
     if (!selectedProduct || !quantity) return;
@@ -241,6 +257,7 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
     setCierreData(data);
     setShowCierreDialog(true);
   };
+  const [searchTerm, setSearchTerm] = useState("");
 
   return (
     <main className="min-h-screen bg-[rgba(10,103,162,1)] p-6">
@@ -255,35 +272,69 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
         {/* IZQUIERDA - PRODUCTOS */}
-        <Card className="bg-[rgba(241,244,245,1)]">
-          <CardHeader>
-            <CardTitle>Productos registrados</CardTitle>
+        <Card className="bg-[rgba(241,244,245,1)] shadow-md rounded-2xl">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="text-lg font-semibold">Productos registrados</CardTitle>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Input
+                type="text"
+                placeholder="🔍 Buscar producto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-xs"
+              />
+              <Button
+                variant="outline"
+                onClick={() => setSearchTerm("")}
+                className="hidden sm:inline"
+              >
+                Limpiar
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2">Nombre</th>
-                  <th className="border p-2">Precio</th>
-                  <th className="border p-2">Stock</th>
-                  <th className="border p-2 text-center">Editar</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p.id}>
-                    <td className="border p-2">{p.name}</td>
-                    <td className="border p-2">${Number(p.price).toFixed(0)}</td>
-                    <td className="border p-2">{p.stock > 0 ? p.stock : "⚠️ Agotado"}</td>
-                    <td className="border p-2 text-center">
-                      <Button variant="outline" size="sm" onClick={() => setEditingProduct(p)}>
-                        Editar
-                      </Button>
-                    </td>
+            <div className="overflow-x-auto max-h-[550px] overflow-y-auto rounded-lg border border-gray-200">
+              <table className="w-full border-collapse text-sm">
+                <thead className="sticky top-0 bg-gray-100 z-10">
+                  <tr>
+                    <th className="border p-2">Nombre</th>
+                    <th className="border p-2">Categoría</th>
+                    <th className="border p-2">Precio</th>
+                    <th className="border p-2">Stock</th>
+                    <th className="border p-2 text-center">Editar</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {products
+                    .filter((p) =>
+                      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((p) => (
+                    <tr key={p.id} className="hover:bg-gray-200 transition-colors">
+                      <td className="border p-2 font-medium text-gray-800">{p.name}</td>
+                      <td className="border p-2 text-gray-700">{p.category}</td>
+                      <td className="border p-2 text-gray-700">${Number(p.price).toFixed(0)}</td>
+                      <td className="border p-2 text-gray-700">
+                        {p.stock > 0 ? (
+                          p.stock
+                        ) : (
+                          <span className="text-red-500 font-semibold">⚠️ Agotado</span>
+                        )}
+                      </td>
+                      <td className="border p-2 text-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingProduct(p)}
+                        >
+                          Editar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
 
@@ -342,10 +393,62 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
             {/* BOTÓN CIERRE DEL DÍA */}
             <div className="mt-6 flex justify-center">
               <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleCierreDelDia}>Cierre del Día</Button>
+              <Button
+                variant="outline"
+                className="mt-2 border-blue-600 text-blue-700 hover:bg-blue-100"
+                onClick={fetchHistorialCierres}
+              >
+                Ver Historial de Cierres
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showHistorialDialog} onOpenChange={setShowHistorialDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>📊 Historial de Cierres Diarios</DialogTitle>
+          </DialogHeader>
+
+          {cierres.length === 0 ? (
+            <p className="text-gray-500 text-center py-6">No hay cierres registrados aún.</p>
+          ) : (
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-lg">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-gray-100 sticky top-0">
+                  <tr>
+                    <th className="border p-2">Fecha</th>
+                    <th className="border p-2">Pedidos Cerrados</th>
+                    <th className="border p-2">Total Propinas</th>
+                    <th className="border p-2">Total Ventas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cierres.map((cierre, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="border p-2 text-center">
+                        {new Date(cierre.fecha).toLocaleDateString()}
+                      </td>
+                      <td className="border p-2 text-center">{cierre.pedidosCerrados}</td>
+                      <td className="border p-2 text-right">
+                        ${Number(cierre.totalPropinas).toLocaleString()}
+                      </td>
+                      <td className="border p-2 text-right font-semibold">
+                        ${Number(cierre.totalVentas).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="mt-4 flex justify-center">
+            <Button onClick={() => setShowHistorialDialog(false)}>Cerrar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* DIALOG NUEVO PEDIDO */}
       <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>

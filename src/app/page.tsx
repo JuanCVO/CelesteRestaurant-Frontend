@@ -43,6 +43,9 @@ export default function HomePage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showTipDialog, setShowTipDialog] = useState(false);
   const [showCierreDialog, setShowCierreDialog] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+const [isClosingDay, setIsClosingDay] = useState(false);
+
 
   // Pedido nuevo o existente
   const [newPedido, setNewPedido] = useState<{ table: string; items: OrderItem[] }>({
@@ -95,7 +98,7 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
   const [showHistorialDialog, setShowHistorialDialog] = useState(false);
 
   const fetchHistorialCierres = async () => {
-    const res = await fetch(`${API_URL}/cierres`); // <-- Asegúrate que el endpoint sea este
+    const res = await fetch(`${API_URL}/orders/cierres`);  // <-- Asegúrate que el endpoint sea este
     const data = await res.json();
 
     if (!res.ok) {
@@ -245,18 +248,33 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
   };
 
   // 📅 Cierre del día (calcula pedidos cerrados del dia )
-  const handleCierreDelDia = async () => {
-    const res = await fetch(`${API_URL}/orders/cierre-dia`, {
-      method: "POST",
-    });
+  const handleConfirmCierre = () => {
+  setShowConfirmDialog(true);
+};
+
+// 📦 Ejecuta el cierre real (solo si confirma)
+const handleCierreDelDia = async () => {
+  try {
+    setIsClosingDay(true);
+    const res = await fetch(`${API_URL}/orders/cierre-dia`, { method: "POST" });
     const data = await res.json();
+
     if (!res.ok) {
-      alert(`❌ ${data.error || "Error al generar el cierre."}`);
+      alert(`⚠️ ${data.error || "Error al generar el cierre."}`);
       return;
     }
+
     setCierreData(data);
+    setShowConfirmDialog(false);
     setShowCierreDialog(true);
+  } catch (error) {
+    console.error("❌ Error en el cierre del día:", error);
+    alert("❌ No se pudo completar el cierre del día. Inténtalo nuevamente.");
+  } finally {
+    setIsClosingDay(false);
+  }
   };
+
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
@@ -392,10 +410,15 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
 
             {/* BOTÓN CIERRE DEL DÍA */}
             <div className="mt-6 flex justify-center">
-              <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleCierreDelDia}>Cierre del Día</Button>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleConfirmCierre}
+              >
+                Cierre del Día
+              </Button>
               <Button
                 variant="outline"
-                className="mt-2 border-blue-600 text-blue-700 hover:bg-blue-100"
+                className="border-blue-600 text-blue-700 hover:bg-blue-100"
                 onClick={fetchHistorialCierres}
               >
                 Ver Historial de Cierres
@@ -446,6 +469,30 @@ const [cierreData, setCierreData] = useState<CierreData | null>(null);
 
           <div className="mt-4 flex justify-center">
             <Button onClick={() => setShowHistorialDialog(false)}>Cerrar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* DIALOG CONFIRMACIÓN DE CIERRE */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>¿Confirmar cierre del día?</DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-600 mb-4">
+            Esta acción registrará el total de ventas y propinas del día. 
+            Solo puede hacerse una vez por jornada.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleCierreDelDia}
+              disabled={isClosingDay}
+            >
+              {isClosingDay ? "Guardando..." : "Confirmar"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

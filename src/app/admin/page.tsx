@@ -106,7 +106,7 @@ export default function HomePage() {
   // 🧾 Cargar productos y pedidos
   const fetchProducts = async () => {
     try {
-      const data = await fetchWithToken(`${API_URL}/api/products`);
+      const data = await fetchWithToken(`${API_URL}/products`);
       if (Array.isArray(data)) setProducts(data);
       else setProducts([]);
     } catch (error) {
@@ -117,7 +117,7 @@ export default function HomePage() {
 
   const fetchPedidos = async () => {
     try {
-      const data = await fetchWithToken(`${API_URL}/api/orders`);
+      const data = await fetchWithToken(`${API_URL}/orders`);
       if (Array.isArray(data)) setPedidos(data);
       else setPedidos([]);
     } catch (error) {
@@ -136,7 +136,7 @@ export default function HomePage() {
   // ✏️ Editar producto
   const updateProduct = async (updated: Product) => {
     try {
-      await fetchWithToken(`${API_URL}/api/products/${updated.id}`, {
+      await fetchWithToken(`${API_URL}/products/${updated.id}`, {
         method: "PUT",
         body: JSON.stringify(updated),
       });
@@ -149,7 +149,7 @@ export default function HomePage() {
   // 📊 Historial de cierres
   const fetchHistorialCierres = async () => {
     try {
-      const data = await fetchWithToken(`${API_URL}/api/orders/cierres`);
+      const data = await fetchWithToken(`${API_URL}/orders/cierres`);
       if (Array.isArray(data)) setCierres(data);
       else setCierres([]);
       setShowHistorialDialog(true);
@@ -188,7 +188,7 @@ export default function HomePage() {
       return alert("Debes asignar una mesa y agregar productos.");
 
     try {
-      await fetchWithToken(`${API_URL}/api/orders`, {
+      await fetchWithToken(`${API_URL}/orders`, {
         method: "POST",
         body: JSON.stringify({
           table: newPedido.table,
@@ -215,7 +215,7 @@ export default function HomePage() {
       return alert("Debes seleccionar un pedido y agregar productos.");
 
     try {
-      await fetchWithToken(`${API_URL}/api/orders/${selectedPedidoId}/add-item`, {
+      await fetchWithToken(`${API_URL}/orders/${selectedPedidoId}/add-item`, {
         method: "PATCH",
         body: JSON.stringify({
           items: newPedido.items.map((i) => ({
@@ -242,7 +242,7 @@ export default function HomePage() {
     const tip = parseFloat(tipAmount) || 0;
 
     try {
-      await fetchWithToken(`${API_URL}/api/orders/${selectedPedidoId}/close`, {
+      await fetchWithToken(`${API_URL}/orders/${selectedPedidoId}/close`, {
         method: "PATCH",
         body: JSON.stringify({ tip }),
       });
@@ -261,7 +261,7 @@ export default function HomePage() {
     if (!confirm(`¿Eliminar el pedido #${id}?`)) return;
 
     try {
-      await fetchWithToken(`${API_URL}/api/orders/${id}`, { method: "DELETE" });
+      await fetchWithToken(`${API_URL}/orders/${id}`, { method: "DELETE" });
       alert("✅ Pedido eliminado.");
       fetchPedidos();
       fetchProducts();
@@ -275,7 +275,7 @@ export default function HomePage() {
   const handleCierreDelDia = async () => {
     try {
       setIsClosingDay(true);
-      const res = await fetch(`${API_URL}/api/orders/cierre-dia`, { method: "POST" });
+      const res = await fetch(`${API_URL}/orders/cierre-dia`, { method: "POST" });
       const data = await res.json();
 
       if (!res.ok) {

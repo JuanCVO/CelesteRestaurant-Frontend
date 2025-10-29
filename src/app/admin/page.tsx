@@ -60,6 +60,12 @@ export default function HomePage() {
   const [isClosingDay, setIsClosingDay] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cierreData, setCierreData] = useState<CierreData | null>(null);
+  const [showPagosDialog, setShowPagosDialog] = useState(false);
+  const [pagos, setPagos] = useState<any[]>([]);
+  const [empleados, setEmpleados] = useState<any[]>([]);
+  const [selectedEmpleado, setSelectedEmpleado] = useState<number | "">("");
+  const [monto, setMonto] = useState("");
+  const [descripcion, setDescripcion] = useState("");
 
   const [newPedido, setNewPedido] = useState<{ table: string; items: OrderItem[] }>({
     table: "",
@@ -130,6 +136,10 @@ export default function HomePage() {
     if (user) {
       fetchProducts();
       fetchPedidos();
+       fetchProducts();
+      fetchPedidos();
+      fetchPagos();       
+      fetchEmpleados(); 
     }
   }, [user]);
 
@@ -269,6 +279,54 @@ export default function HomePage() {
       alert("❌ Error al eliminar pedido.");
     }
   };
+
+  const fetchPagos = async () => {
+  try {
+    const data = await fetchWithToken(`${API_URL}/pagos`);
+    if (Array.isArray(data)) setPagos(data);
+  } catch (error) {
+    console.error("❌ Error al cargar pagos:", error);
+  }
+};
+
+// 👷‍♂️ Obtener empleados (excepto admin)
+const fetchEmpleados = async () => {
+  try {
+    const data = await fetchWithToken(`${API_URL}/users`);
+    if (Array.isArray(data)) {
+      setEmpleados(data.filter((u) => u.role !== "ADMIN"));
+    }
+  } catch (error) {
+    console.error("❌ Error al obtener empleados:", error);
+  }
+};
+
+// 💾 Registrar nuevo pago
+const handleRegistrarPago = async () => {
+  if (!selectedEmpleado || !monto)
+    return alert("Selecciona un empleado y especifica el monto.");
+
+  try {
+    await fetchWithToken(`${API_URL}/pagos`, {
+      method: "POST",
+      body: JSON.stringify({
+        empleadoId: selectedEmpleado,
+        monto: Number(monto),
+        descripcion,
+      }),
+    });
+
+    alert("✅ Pago registrado correctamente.");
+    setSelectedEmpleado("");
+    setMonto("");
+    setDescripcion("");
+    fetchPagos();
+  } catch (error) {
+    console.error("❌ Error al registrar pago:", error);
+    alert("No se pudo registrar el pago.");
+  }
+};
+
 
   const handleConfirmCierre = () => setShowConfirmDialog(true);
 
@@ -460,12 +518,19 @@ export default function HomePage() {
               >
                 Cierre del Día
               </Button>
+              
               <Button
                 variant="outline"
                 className="border-blue-600 text-blue-700 hover:bg-blue-100"
                 onClick={fetchHistorialCierres}
               >
                 Ver Historial de Cierres
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => setShowPagosDialog(true)}
+              >
+                Pagos al Personal
               </Button>
             </div>
           </CardContent>
@@ -475,7 +540,7 @@ export default function HomePage() {
       <Dialog open={showHistorialDialog} onOpenChange={setShowHistorialDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>📊 Historial de Cierres Diarios</DialogTitle>
+            <DialogTitle>Historial de Cierres Diarios</DialogTitle>
           </DialogHeader>
 
           {cierres.length === 0 ? (
@@ -558,6 +623,90 @@ export default function HomePage() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* 💰 DIALOG PAGOS AL PERSONAL */}
+      <Dialog open={showPagosDialog} onOpenChange={setShowPagosDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Registro de Pagos al Personal</DialogTitle>
+          </DialogHeader>
+
+          {/* FORMULARIO NUEVO PAGO */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <select
+              className="border p-2 rounded w-full sm:w-1/3"
+              value={selectedEmpleado}
+              onChange={(e) => setSelectedEmpleado(Number(e.target.value))}
+            >
+              <option value="">Selecciona un empleado</option>
+              {empleados.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name} ({e.role})
+                </option>
+              ))}
+            </select>
+
+            <Input
+              type="number"
+              placeholder="Monto"
+              value={monto}
+              onChange={(e) => setMonto(e.target.value)}
+              className="sm:w-1/4"
+            />
+
+            <Input
+              type="text"
+              placeholder="Descripción (opcional)"
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              className="sm:flex-1"
+            />
+
+            <Button onClick={handleRegistrarPago} className="bg-green-600 hover:bg-green-700">
+              Registrar
+            </Button>
+          </div>
+
+          {/* TABLA DE PAGOS */}
+          <div className="overflow-x-auto max-h-[400px] overflow-y-auto border rounded-lg">
+            <table className="w-full border-collapse text-sm">
+              <thead className="bg-gray-100 sticky top-0">
+                <tr>
+                  <th className="border p-2">Empleado</th>
+                  <th className="border p-2">Rol</th>
+                  <th className="border p-2 text-right">Monto</th>
+                  <th className="border p-2">Fecha</th>
+                  <th className="border p-2">Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagos.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center text-gray-400 p-4">
+                      No hay pagos registrados.
+                    </td>
+                  </tr>
+                ) : (
+                  pagos.map((pago) => (
+                    <tr key={pago.id} className="hover:bg-gray-50">
+                      <td className="border p-2">{pago.empleado.name}</td>
+                      <td className="border p-2">{pago.empleado.role}</td>
+                      <td className="border p-2 text-right font-semibold">
+                        ${Number(pago.monto).toLocaleString()}
+                      </td>
+                      <td className="border p-2">
+                        {new Date(pago.fechaPago).toLocaleDateString("es-CO")}
+                      </td>
+                      <td className="border p-2">{pago.descripcion || "-"}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* DIALOG AGREGAR A PEDIDO EXISTENTE */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>

@@ -84,7 +84,7 @@ export default function MeseroPage() {
   // 📦 Cargar productos y pedidos
   const fetchProducts = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/products/public`);
+      const res = await fetch(`${API_URL}/products/public`);
       const data = await res.json();
       if (Array.isArray(data)) setProducts(data);
     } catch (err) {
@@ -94,7 +94,7 @@ export default function MeseroPage() {
 
   const fetchPedidos = async () => {
     try {
-      const data = await fetchWithToken(`${API_URL}/api/orders`);
+      const data = await fetchWithToken(`${API_URL}/orders`);
       if (Array.isArray(data)) setPedidos(data);
     } catch (err) {
       console.error("Error cargando pedidos:", err);
@@ -137,7 +137,7 @@ export default function MeseroPage() {
       return alert("Debes asignar una mesa y agregar productos.");
 
     try {
-      await fetchWithToken(`${API_URL}/api/orders`, {
+      await fetchWithToken(`${API_URL}/orders`, {
         method: "POST",
         body: JSON.stringify({
           table: newPedido.table,
@@ -163,7 +163,7 @@ export default function MeseroPage() {
       return alert("Selecciona un pedido y agrega productos.");
 
     try {
-      await fetchWithToken(`${API_URL}/api/orders/${selectedPedidoId}/add-item`, {
+      await fetchWithToken(`${API_URL}/orders/${selectedPedidoId}/add-item`, {
         method: "PATCH",
         body: JSON.stringify({
           items: newPedido.items.map((i) => ({
@@ -189,7 +189,7 @@ export default function MeseroPage() {
     const tip = parseFloat(tipAmount) || 0;
 
     try {
-      await fetchWithToken(`${API_URL}/api/orders/${selectedPedidoId}/close`, {
+      await fetchWithToken(`${API_URL}/orders/${selectedPedidoId}/close`, {
         method: "PATCH",
         body: JSON.stringify({ tip }),
       });

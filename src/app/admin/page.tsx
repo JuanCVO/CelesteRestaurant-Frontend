@@ -18,6 +18,24 @@ interface Product {
   stock: number;
 }
 
+interface Empleado {
+  id: number;
+  name: string;
+  role: string;
+}
+
+interface Pago {
+  id: number;
+  empleado: {
+    name: string;
+    role: string;
+  };
+  monto: number;
+  descripcion?: string | null;
+  fechaPago: string;
+}
+
+
 interface OrderItem {
   productId: number;
   quantity: number;
@@ -61,8 +79,8 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [cierreData, setCierreData] = useState<CierreData | null>(null);
   const [showPagosDialog, setShowPagosDialog] = useState(false);
-  const [pagos, setPagos] = useState<any[]>([]);
-  const [empleados, setEmpleados] = useState<any[]>([]);
+  const [pagos, setPagos] = useState<Pago[]>([]);
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [selectedEmpleado, setSelectedEmpleado] = useState<number | "">("");
   const [monto, setMonto] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -136,10 +154,9 @@ export default function HomePage() {
     if (user) {
       fetchProducts();
       fetchPedidos();
-       fetchProducts();
-      fetchPedidos();
-      fetchPagos();       
-      fetchEmpleados(); 
+      fetchPagos();
+      fetchEmpleados();
+      
     }
   }, [user]);
 
